@@ -1,0 +1,12 @@
+{
+  "files": [
+    {"file": "/home/renich/Projects/crystal/crypto/crystal-ecc-constant/src/crystal-ecc-constant.cr", "percent_covered": "94.29", "covered_lines": "66", "total_lines": "70"}
+  ],
+  "percent_covered": "94.29",
+  "covered_lines": 66,
+  "total_lines": 70,
+  "percent_low": 25,
+  "percent_high": 75,
+  "command": "spec_runner",
+  "date": "2026-06-05 05:35:52"
+}
