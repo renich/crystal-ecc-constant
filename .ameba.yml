@@ -1,3 +1,2 @@
-Style/VerboseBlock:
-  Excluded:
-    - spec/crystal-ecc-constant_spec.cr
+Layout/LineLength:
+  MaxLength: 132
