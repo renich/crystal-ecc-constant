@@ -1,9 +1,5 @@
-macro uninitialized(type)
-  Pointer({{type}}).malloc(1).value
-end
-
 module Crystal::Ecc::Constant
-  VERSION = "0.1.0"
+  VERSION = "0.1.1"
 
   class SodiumError < Exception
   end

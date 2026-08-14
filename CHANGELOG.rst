@@ -10,6 +10,18 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+[0.1.1] - 2026-08-13
+====================
+
+Fixed
+~~~~~
+- Removed leaking macro ``uninitialized(type)`` in favor of Crystal's native type system.
+- Replaced verbose block syntax with concise block shorthand.
+
+Refactored
+----------
+- Modernized spec type hierarchy checks using native Crystal inheritance operators (``< Reference``, ``< Struct``).
+
 [0.1.0] - 2026-06-05
 ====================
 

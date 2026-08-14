@@ -6,13 +6,12 @@ describe Crystal::Ecc::Constant do
     it "ensures sensitive wrappers use safe class wrappers to avoid double free" do
       # Classes are Reference types in Crystal, which safely share references
       # and allow finalizers for memory safety.
-      Crystal::Ecc::Constant::PrivateKeyPointer.new(Pointer(UInt8).null, 0).is_a?(Reference).should be_truthy
-      # Note: We use uninitialized here just to check the type without calling a private initialize
-      (uninitialized Crystal::Ecc::Constant::Ed25519KeyPair).is_a?(Reference).should be_truthy
-      (uninitialized Crystal::Ecc::Constant::X25519KeyPair).is_a?(Reference).should be_truthy
-      (uninitialized Crystal::Ecc::Constant::SharedSecret).is_a?(Reference).should be_truthy
-      (uninitialized Crystal::Ecc::Constant::PublicKey).is_a?(Struct).should be_truthy
-      (uninitialized Crystal::Ecc::Constant::Signature).is_a?(Struct).should be_truthy
+      (Crystal::Ecc::Constant::PrivateKeyPointer < Reference).should be_true
+      (Crystal::Ecc::Constant::Ed25519KeyPair < Reference).should be_true
+      (Crystal::Ecc::Constant::X25519KeyPair < Reference).should be_true
+      (Crystal::Ecc::Constant::SharedSecret < Reference).should be_true
+      (Crystal::Ecc::Constant::PublicKey < Struct).should be_true
+      (Crystal::Ecc::Constant::Signature < Struct).should be_true
     end
   end
 
@@ -28,7 +27,7 @@ describe Crystal::Ecc::Constant do
       end
 
       it "accepts 32 bytes and returns a copy" do
-        bytes = Bytes.new(32) { |i| i.to_u8 }
+        bytes = Bytes.new(32, &.to_u8)
         pk = Crystal::Ecc::Constant::PublicKey.new(bytes)
 
         # Modify original bytes, ensure PK remains unchanged
@@ -45,7 +44,7 @@ describe Crystal::Ecc::Constant do
       end
 
       it "accepts 64 bytes and returns a copy" do
-        bytes = Bytes.new(64) { |i| i.to_u8 }
+        bytes = Bytes.new(64, &.to_u8)
         sig = Crystal::Ecc::Constant::Signature.new(bytes)
 
         bytes[0] = 99_u8
