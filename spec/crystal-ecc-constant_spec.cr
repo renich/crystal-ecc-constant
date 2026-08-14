@@ -107,33 +107,25 @@ describe Crystal::Ecc::Constant do
       alice = Crystal::Ecc::Constant::X25519KeyPair.generate
       bob = Crystal::Ecc::Constant::X25519KeyPair.generate
 
-      alice_shared_ptr = Pointer(Crystal::Ecc::Constant::SharedSecret).null
-      bob_shared_ptr = Pointer(Crystal::Ecc::Constant::SharedSecret).null
+      alice_shared = alice.diffie_hellman(bob.public_key)
+      bob_shared = bob.diffie_hellman(alice.public_key)
 
-      begin
-        alice_shared = alice.diffie_hellman(bob.public_key)
-        alice_shared_ptr = pointerof(alice_shared)
+      alice_secret = alice_shared.consume
+      bob_secret = bob_shared.consume
 
-        bob_shared = bob.diffie_hellman(alice.public_key)
-        bob_shared_ptr = pointerof(bob_shared)
+      # Verify matching secrets using constant_time_equal?
+      match = Crystal::Ecc::Constant::Sodium.constant_time_equal?(alice_secret, bob_secret)
+      match.should be_true
 
-        alice_secret = alice_shared.consume
-        bob_secret = bob_shared.consume
-
-        # Verify matching secrets using constant_time_equal?
-        match = Crystal::Ecc::Constant::Sodium.constant_time_equal?(alice_secret, bob_secret)
-        match.should be_true
-
-        # Verify SharedSecret can't be consumed twice
-        expect_raises(Crystal::Ecc::Constant::SodiumError, "Shared secret already consumed") do
-          alice_shared.consume
-        end
-      ensure
-        alice.dispose
-        bob.dispose
-        alice_shared_ptr.value.dispose if alice_shared_ptr && !alice_shared_ptr.null?
-        bob_shared_ptr.value.dispose if bob_shared_ptr && !bob_shared_ptr.null?
+      # Verify SharedSecret can't be consumed twice
+      expect_raises(Crystal::Ecc::Constant::SodiumError, "Shared secret already consumed") do
+        alice_shared.consume
       end
+
+      alice.dispose
+      bob.dispose
+      alice_shared.dispose
+      bob_shared.dispose
     end
 
     it "raises when trying to diffie_hellman with a disposed keypair" do
