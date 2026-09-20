@@ -8,10 +8,11 @@ A high-performance, strictly constant-time **Elliptic Curve Cryptography (ECC)**
 ## Features
 
 - **Ed25519 Digital Signatures**: Detached digital signature generation and verification.
-- **X25519 Diffie-Hellman Key Exchange**: Fast ECDH shared secret derivation with single-consumption semantics.
-- **Constant-Time Comparison**: Secure buffer comparisons using `sodium_memcmp` to mitigate timing attacks.
-- **Strict Memory Safety & Lifetime Tracking**: Private keys and shared secrets reside in pinned secure memory (`sodium_malloc`) and are automatically zeroed and freed upon disposal.
-- **Defensive Type Design**: Reference wrappers prevent shallow-copy double-free vulnerabilities.
+- **Deterministic Key Derivation**: Derive Ed25519 and X25519 keypairs from 32-byte cryptographic seeds (`from_seed`).
+- **X25519 Diffie-Hellman Key Exchange**: Fast ECDH shared secret derivation with block-scoped memory sanitization or copy-on-consume semantics.
+- **Constant-Time Comparison**: Secure buffer comparisons using `sodium_memcmp` to eliminate timing side-channels.
+- **Strict Memory Safety & Lifetime Tracking**: Private keys and shared secrets reside in pinned secure memory (`sodium_malloc`) with guard pages, explicitly sanitized via `sodium_memzero` upon disposal.
+- **Multithreading Concurrency**: Protected via Crystal 1.21 `Sync::Mutex` and atomic initialization.
 
 ## Installation
 
@@ -21,7 +22,7 @@ Add this to your application's `shard.yml`:
 dependencies:
   crystal-ecc-constant:
     github: renich/crystal-ecc-constant
-    version: ~> 0.1.1
+    version: ~> 0.1.2
 ```
 
 Then run:
@@ -37,7 +38,7 @@ Make sure `libsodium` development headers are installed on your host (e.g. `dnf 
 ```crystal
 require "crystal-ecc-constant"
 
-# Initialize libsodium
+# Initialize libsodium (thread-safe, idempotent)
 Crystal::Ecc::Constant::Sodium.init
 
 # Ed25519 Signing & Verification
@@ -50,14 +51,20 @@ puts "Signature valid: #{is_valid}"
 
 keypair.dispose
 
-# X25519 ECDH Key Exchange
+# Deterministic Seed Derivation
+seed = Random::Secure.random_bytes(32)
+persistent_key = Crystal::Ecc::Constant::Ed25519KeyPair.from_seed(seed)
+
+# X25519 ECDH Key Exchange (Block-Scoped Consumption)
 alice = Crystal::Ecc::Constant::X25519KeyPair.generate
 bob = Crystal::Ecc::Constant::X25519KeyPair.generate
 
-alice_secret = alice.diffie_hellman(bob.public_key).consume
-bob_secret = bob.diffie_hellman(alice.public_key).consume
-
-puts "Secrets match: #{Crystal::Ecc::Constant::Sodium.constant_time_equal?(alice_secret, bob_secret)}"
+alice.diffie_hellman(bob.public_key).consume do |alice_secret|
+  bob.diffie_hellman(alice.public_key).consume do |bob_secret|
+    matched = Crystal::Ecc::Constant::Sodium.constant_time_equal?(alice_secret, bob_secret)
+    puts "Secrets match: #{matched}"
+  end
+end
 
 alice.dispose
 bob.dispose
@@ -78,6 +85,7 @@ make docs     # Generates API documentation into docs/technical/api
 
 - **API Documentation**: Generated HTML docs located at [`docs/technical/api/`](docs/technical/api/index.html).
 - **Technical Specification**: [`docs/technical/spec.rst`](docs/technical/spec.rst)
+- **White Paper**: [`docs/whitepaper.rst`](docs/whitepaper.rst)
 - **Project Roadmap**: [`docs/project/roadmap.rst`](docs/project/roadmap.rst)
 - **Changelog**: [`CHANGELOG.rst`](CHANGELOG.rst)
 - **Code of Honor**: [`docs/technical/CODE_OF_HONOR.rst`](docs/technical/CODE_OF_HONOR.rst)
