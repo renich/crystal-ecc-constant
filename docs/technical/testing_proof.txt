@@ -1,0 +1,30 @@
+Crystal::Ecc::Constant
+  Type Design (Structs vs Classes)
+    ensures sensitive wrappers use safe class wrappers to avoid double free    ensures sensitive wrappers use safe class wrappers to avoid double free
+  Public Data Types
+    PublicKey
+      rejects initialization with invalid sizes      rejects initialization with invalid sizes
+      accepts 32 bytes and returns a copy      accepts 32 bytes and returns a copy
+    Signature
+      rejects initialization with invalid sizes      rejects initialization with invalid sizes
+      accepts 64 bytes and returns a copy      accepts 64 bytes and returns a copy
+  Sodium Initialization
+    initializes libsodium atomically    initializes libsodium atomically
+  Ed25519
+    generates a keypair, signs, and verifies correctly    generates a keypair, signs, and verifies correctly
+    signs an empty message correctly    signs an empty message correctly
+    raises when trying to sign with a disposed keypair    raises when trying to sign with a disposed keypair
+  X25519 (ECDH)
+    generates keypairs and performs a successful diffie-hellman exchange    generates keypairs and performs a successful diffie-hellman exchange
+    raises when trying to diffie_hellman with a disposed keypair    raises when trying to diffie_hellman with a disposed keypair
+  Constant-time equality
+    returns true for equal bytes    returns true for equal bytes
+    returns false for different bytes of same length    returns false for different bytes of same length
+    returns false for different lengths    returns false for different lengths
+    handles empty slices safely    handles empty slices safely
+Adversarial Checks
+  prevents double-free vulnerabilities when instances are assigned/copied  prevents double-free vulnerabilities when instances are assigned/copied
+  safely handles early disposal of SharedSecret  safely handles early disposal of SharedSecret
+
+Finished in 1.66 milliseconds
+17 examples, 0 failures, 0 errors, 0 pending
