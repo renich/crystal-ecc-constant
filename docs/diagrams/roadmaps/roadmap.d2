@@ -19,16 +19,6 @@ classes: {
       bold: true
     }
   }
-  planned_phase: {
-    shape: step
-    style: {
-      stroke: "#6B46C1"
-      stroke-width: 2
-      fill: "#FAF5FF"
-      font-color: "#44337A"
-      bold: true
-    }
-  }
   audit_gate: {
     shape: diamond
     style: {
@@ -49,9 +39,14 @@ gate1: "Crucible & Echelon Audit\n25/25 Specs Passing\n0 Linter Findings" {
   class: audit_gate
 }
 
-phase2: "Phase 2: Streaming & KDF Enhancement (v0.3.0)\nStatus: Planned\nFulfills [FUNC-006]..[FUNC-007]\nImplements [TECH-005]..[TECH-007]" {
-  class: planned_phase
+phase2: "Phase 2: Streaming & KDF Enhancement (v0.2.2)\nStatus: Completed\nFulfills [FUNC-006]..[FUNC-007]\nImplements [TECH-005]..[TECH-007]" {
+  class: completed_phase
+}
+
+gate2: "Release v0.2.2 Audit\n30/30 Specs Passing\n0 Linter Findings" {
+  class: audit_gate
 }
 
 phase1 -> gate1: "Verified v0.2.1"
 gate1 -> phase2: "Unblocks Phase 2"
+phase2 -> gate2: "Verified v0.2.2"

@@ -1,7 +1,7 @@
 require "sync/mutex"
 
 module Crystal::Ecc::Constant
-  # Reference-counted wrapper managing a private key buffer in libsodium secure memory.
+  # Reference-counted wrapper managing a private key or secret buffer in libsodium secure memory.
   class PrivateKeyPointer
     # Size of the allocated private key buffer in bytes.
     getter size : Int32
@@ -35,11 +35,36 @@ module Crystal::Ecc::Constant
       new(ptr, size)
     end
 
+    # Allocates a new guarded buffer populated from `bytes` and locked read-only.
+    def self.from_bytes(bytes : Bytes) : self
+      raise ArgumentError.new("SecureBuffer cannot be empty") if bytes.empty?
+
+      allocate(bytes.size) do |ptr|
+        bytes.to_unsafe.copy_to(ptr, bytes.size)
+      end
+    end
+
     # Yields the underlying pointer while holding the synchronization lock to prevent concurrent disposal.
     def with_pointer(& : Pointer(UInt8) -> T) : T forall T
       @mutex.synchronize do
         raise SodiumError.new("Key has been disposed") if @disposed || @pointer.null?
         yield @pointer
+      end
+    end
+
+    # Yields a read-only `Bytes` view of the guarded buffer while holding the synchronization lock.
+    def with_bytes(& : Bytes -> T) : T forall T
+      with_pointer do |ptr|
+        yield Bytes.new(ptr, @size, read_only: true)
+      end
+    end
+
+    # Returns a defensive byte slice copy of the guarded buffer.
+    def to_bytes : Bytes
+      with_bytes do |slice|
+        copy = Bytes.new(@size)
+        slice.copy_to(copy)
+        copy
       end
     end
 
@@ -75,6 +100,9 @@ module Crystal::Ecc::Constant
     end
   end
 
+  # Alias for `PrivateKeyPointer` representing a guarded memory secret buffer.
+  alias SecureBuffer = PrivateKeyPointer
+
   # Single-use wrapper managing an ECDH shared secret in libsodium secure memory.
   class SharedSecret
     # Size of the allocated shared secret buffer in bytes.
@@ -89,6 +117,11 @@ module Crystal::Ecc::Constant
 
       void_ptr = LibSodium.sodium_malloc(@size.to_u64)
       raise SodiumError.new("Failed to allocate shared secret") if void_ptr.null?
+      if LibSodium.sodium_mprotect_readonly(void_ptr) != 0
+        LibSodium.sodium_memzero(void_ptr, @size.to_u64)
+        LibSodium.sodium_free(void_ptr)
+        raise SodiumError.new("sodium_mprotect_readonly failed")
+      end
       @ptr = void_ptr.as(Pointer(UInt8))
     end
 
@@ -96,9 +129,16 @@ module Crystal::Ecc::Constant
     def with_unsafe_ptr(& : Pointer(UInt8) -> T) : T forall T
       @mutex.synchronize do
         raise SodiumError.new("Shared secret already disposed") if @disposed || @ptr.null?
-        result = yield @ptr
-        LibSodium.sodium_mprotect_readonly(@ptr.as(Void*))
-        result
+        if LibSodium.sodium_mprotect_readwrite(@ptr.as(Void*)) != 0
+          raise SodiumError.new("sodium_mprotect_readwrite failed")
+        end
+        begin
+          yield @ptr
+        ensure
+          if !@disposed && !@ptr.null? && LibSodium.sodium_mprotect_readonly(@ptr.as(Void*)) != 0
+            raise SodiumError.new("sodium_mprotect_readonly failed")
+          end
+        end
       end
     end
 

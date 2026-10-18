@@ -75,12 +75,12 @@ crystal_tier: "Crystal::Ecc::Constant Reference Layer" {
     class: module_node
   }
 
-  ed25519ph: "Ed25519ph Streaming State (v0.3.0)\ncrypto_sign_ed25519ph_state in Guarded Memory\nMulti-Part Large Payload Signing\n[FUNC-006] [TECH-006]" {
-    class: phase2_node
+  ed25519ph: "Ed25519PhStream (v0.2.2)\ncrypto_sign_ed25519ph_state in Guarded Memory\nMulti-Part Large Payload Signing\n[FUNC-006] [TECH-006]" {
+    class: module_node
   }
 
-  kdf: "Guarded Subkey KDF & Wycheproof Suite (v0.3.0)\ncrypto_kdf_derive_from_key -> SecureBuffer\nRFC 7748 & Wycheproof Edge-Case Vectors\n[FUNC-007] [TECH-007]" {
-    class: phase2_node
+  kdf: "Kdf.derive_subkey & Wycheproof Suite (v0.2.2)\ncrypto_kdf_derive_from_key -> SecureBuffer\nRFC 7748 & Wycheproof Edge-Case Vectors\n[FUNC-007] [TECH-007]" {
+    class: module_node
   }
 
   sodium_init -> secure_buffer: "Initializes libsodium >= 10"

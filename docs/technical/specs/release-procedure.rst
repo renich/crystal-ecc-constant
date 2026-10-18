@@ -21,31 +21,31 @@ Prior to tagging any release, the version string must be updated across the code
 
    .. code-block:: yaml
 
-      version: 0.2.1
+      version: 0.2.2
 
 #. **``src/crystal-ecc-constant.cr``**:
 
    .. code-block:: crystal
 
-      VERSION = "0.2.1"
+      VERSION = "0.2.2"
 
 #. **``docs/conf.py``**:
 
    .. code-block:: python
 
-      release = '0.2.1'
+      release = '0.2.2'
 
 #. **``CHANGELOG.rst``**:
    Promote items from ``[Unreleased]`` under a new version header using ``.. rubric::`` sections:
 
    .. code-block:: rst
 
-      [0.2.1] - 2026-10-18
+      [0.2.2] - 2026-10-18
       ====================
 
       .. rubric:: Added
 
-      - Full Sphinx and Crystal API documentation portal.
+      - Implemented ``Ed25519PhStream`` and ``Kdf.derive_subkey`` in guarded memory.
 
 Step-by-Step Release Execution Playbook
 ---------------------------------------
@@ -71,7 +71,7 @@ Stage and commit version changes adhering to Conventional Commit standards:
 .. code-block:: bash
 
    git add shard.yml src/crystal-ecc-constant.cr docs/conf.py CHANGELOG.rst
-   git commit -m "chore(release): bump version to 0.2.1"
+   git commit -m "chore(release): bump version to 0.2.2"
 
 Step 3: Create Signed Annotated Git Tag
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,7 +80,7 @@ Create a GPG-signed Git tag for the release:
 
 .. code-block:: bash
 
-   git tag -s v0.2.1 -m "Release v0.2.1"
+   git tag -s v0.2.2 -m "Release v0.2.2"
 
 Step 4: Push Branch and Tags to GitLab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

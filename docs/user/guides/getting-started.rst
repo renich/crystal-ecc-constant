@@ -12,7 +12,7 @@ Ensure ``libsodium`` development headers are installed on your system (for examp
    dependencies:
      crystal-ecc-constant:
        gitlab: renich/crystal-ecc-constant
-       version: ~> 0.2.1
+       version: ~> 0.2.2
 
 Install dependencies:
 
@@ -23,7 +23,7 @@ Install dependencies:
 Basic Usage
 -----------
 
-Require the library, initialize ``libsodium``, and perform Ed25519 signing or X25519 Diffie-Hellman key agreement:
+Require the library, initialize ``libsodium``, and perform Ed25519 signing, ``Ed25519ph`` streaming verification, ``crypto_kdf`` subkey derivation, or X25519 Diffie-Hellman key agreement:
 
 .. code-block:: crystal
 
@@ -32,15 +32,29 @@ Require the library, initialize ``libsodium``, and perform Ed25519 signing or X2
    # Initialize libsodium (thread-safe and idempotent)
    Crystal::Ecc::Constant::Sodium.init
 
-   # Ed25519 Detached Signing and Verification
+   # Ed25519 Detached Signing, Ed25519ph Streaming, and Verification
    keypair = Crystal::Ecc::Constant::Ed25519KeyPair.generate
    begin
      message = "Strictly FIDO2 assertion payload".to_slice
      signature = keypair.sign(message)
      puts keypair.verify(message, signature) # => true
+
+     stream = Crystal::Ecc::Constant::Ed25519PhStream.new
+     stream.update("Multi-part ".to_slice).update("payload".to_slice)
+     ph_sig = stream.final_sign(keypair)
+
+     verifier = Crystal::Ecc::Constant::Ed25519PhStream.new
+     verifier.update("Multi-part payload".to_slice)
+     puts verifier.final_verify(keypair.public_key, ph_sig) # => true
    ensure
      keypair.dispose
    end
+
+   # Guarded BLAKE2b Subkey Derivation
+   master_key = Crystal::Ecc::Constant::SecureBuffer.from_bytes(Random::Secure.random_bytes(32))
+   subkey = Crystal::Ecc::Constant::Kdf.derive_subkey(master_key, 1_u64, "ECC_KDF1", 32)
+   subkey.dispose
+   master_key.dispose
 
    # X25519 ECDH Key Exchange with Block-Scoped Consumption
    alice = Crystal::Ecc::Constant::X25519KeyPair.generate

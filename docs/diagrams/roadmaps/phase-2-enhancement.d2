@@ -11,20 +11,20 @@ vars: {
 classes: {
   milestone_box: {
     style: {
-      stroke: "#6B46C1"
+      stroke: "#2B6CB0"
       stroke-width: 2
       border-radius: 8
-      fill: "#FAF5FF"
+      fill: "#F7FAFC"
     }
   }
-  planned_task: {
+  done_task: {
     shape: rectangle
     style: {
-      stroke: "#6B46C1"
+      stroke: "#2F855A"
       stroke-width: 2
       border-radius: 6
-      fill: "#F3E8FF"
-      font-color: "#44337A"
+      fill: "#F0FFF4"
+      font-color: "#22543D"
       bold: true
     }
   }
@@ -33,12 +33,12 @@ classes: {
 m2_1: "Milestone 2.1: Ed25519ph Streaming Signatures" {
   class: milestone_box
 
-  task201: "TASK-201: LibSodium Ed25519ph & KDF Bindings\nFulfills [FUNC-006] [FUNC-007]\nImplements [TECH-006] [TECH-007]" {
-    class: planned_task
+  task201: "TASK-201: LibSodium Ed25519ph & KDF Bindings\nStatus: Completed\nFulfills [FUNC-006] [FUNC-007]\nImplements [TECH-006] [TECH-007]" {
+    class: done_task
   }
 
-  task202: "TASK-202: Guarded Ed25519ph Streaming State\nFulfills [FUNC-006]\nImplements [TECH-006]" {
-    class: planned_task
+  task202: "TASK-202: Guarded Ed25519ph Streaming State\nStatus: Completed\nFulfills [FUNC-006]\nImplements [TECH-006]" {
+    class: done_task
   }
 
   task201 -> task202: "Unblocks"
@@ -47,12 +47,12 @@ m2_1: "Milestone 2.1: Ed25519ph Streaming Signatures" {
 m2_2: "Milestone 2.2: Guarded Subkey KDF & Wycheproof Vectors" {
   class: milestone_box
 
-  task203: "TASK-203: Guarded crypto_kdf Subkey Derivation\nFulfills [FUNC-007]\nImplements [TECH-007]" {
-    class: planned_task
+  task203: "TASK-203: Guarded crypto_kdf Subkey Derivation\nStatus: Completed\nFulfills [FUNC-007]\nImplements [TECH-007]" {
+    class: done_task
   }
 
-  task204: "TASK-204: RFC 8032, RFC 7748 & Wycheproof Suite\nFulfills [FUNC-006] [FUNC-007]\nImplements [TECH-005] [TECH-006] [TECH-007]" {
-    class: planned_task
+  task204: "TASK-204: RFC 8032, RFC 7748 & Wycheproof Suite\nStatus: Completed\nFulfills [FUNC-006] [FUNC-007]\nImplements [TECH-005] [TECH-006] [TECH-007]" {
+    class: done_task
   }
 
   task203 -> task204: "Unblocks"

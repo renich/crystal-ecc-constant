@@ -37,6 +37,11 @@ module Crystal::Ecc::Constant
       new(PublicKey.new(pk), sk_ptr)
     end
 
+    # Verifies an Ed25519 detached `signature` against `message` and `public_key` in constant time.
+    def self.verify_detached(public_key : PublicKey, message : Bytes, signature : Signature) : Bool
+      public_key.verify_ed25519(message, signature)
+    end
+
     # Produces a 64-byte detached Ed25519 signature for `message`.
     def sign(message : Bytes) : Signature
       sig = Bytes.new(64)
@@ -72,6 +77,12 @@ module Crystal::Ecc::Constant
     # Wipes and frees the underlying private key in secure memory.
     def dispose : Nil
       @private_key.dispose
+    end
+
+    protected def with_secret_key(& : Pointer(UInt8) -> T) : T forall T
+      @private_key.with_pointer do |secret_key|
+        yield secret_key
+      end
     end
   end
 end

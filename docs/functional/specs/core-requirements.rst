@@ -36,11 +36,11 @@ Traceability Summary
    * - ``[FUNC-006]``
      - Pre-Hashed Ed25519ph Streaming Signatures
      - :doc:`../../technical/specs/architecture-overview` (``[TECH-006]``)
-     - ``v0.3.0``
+     - ``v0.2.2``
    * - ``[FUNC-007]``
      - Guarded Subkey Derivation and Wycheproof Vector Verification
      - :doc:`../../technical/specs/threat-model` (``[TECH-005]``), :doc:`../../technical/specs/architecture-overview` (``[TECH-007]``)
-     - ``v0.3.0``
+     - ``v0.2.2``
 
 Functional Requirements
 -----------------------
@@ -61,7 +61,7 @@ Functional Requirements
   The library must guarantee thread-safe initialization and concurrent cryptographic execution across Crystal 1.21 ``Fiber::ExecutionContext::Parallel`` worker threads. ``Sodium.init`` must use double-checked locking with ``Atomic(Bool)`` and ``Sync::Mutex`` and enforce a runtime version gate requiring ``sodium_library_version_major >= 10``. All guarded memory handles must synchronize FFI execution and disposal spans under ``Sync::Mutex`` to prevent time-of-check to time-of-use race conditions, and all build, test, SAST, and documentation targets must execute deterministically via ``GNUmakefile``.
 
 * **[FUNC-006] Pre-Hashed Ed25519ph Streaming Signatures**:
-  For Phase 2 (``v0.3.0``), the library must implement RFC 8032 Section 5.1 pre-hashed ``Ed25519ph`` multi-part streaming signatures using ``crypto_sign_ed25519ph_state`` allocated inside ``sodium_malloc`` guarded memory. The streaming signer must support incremental chunk ingestion (``crypto_sign_ed25519ph_update``), deterministic finalization into a 64-byte ``Signature`` (``crypto_sign_ed25519ph_final_create``), streaming verification (``crypto_sign_ed25519ph_final_verify``), and immediate ``sodium_memzero`` state wiping under ``Sync::Mutex``.
+  For Phase 2 (``v0.2.2``), the library must implement RFC 8032 Section 5.1 pre-hashed ``Ed25519ph`` multi-part streaming signatures using ``crypto_sign_ed25519ph_state`` allocated inside ``sodium_malloc`` guarded memory. The streaming signer must support incremental chunk ingestion (``crypto_sign_ed25519ph_update``), deterministic finalization into a 64-byte ``Signature`` (``crypto_sign_ed25519ph_final_create``), streaming verification (``crypto_sign_ed25519ph_final_verify``), and immediate ``sodium_memzero`` state wiping under ``Sync::Mutex``.
 
 * **[FUNC-007] Guarded Subkey Derivation and Wycheproof Vector Verification**:
-  For Phase 2 (``v0.3.0``), the library must implement BLAKE2b-based hierarchical subkey derivation via ``crypto_kdf_derive_from_key`` accepting a 32-byte guarded master key, a 64-bit ``subkey_id``, and an 8-byte ``context`` string, returning isolated subkeys between 16 and 64 bytes directly inside ``SecureBuffer`` guarded memory without touching the Crystal GC heap. Supplying an invalid ``master_key.size`` (``!= 32``), ``context.bytesize`` (``!= 8``), or ``subkey_size`` (``< 16`` or ``> 64``) must raise ``ArgumentError``, whereas a disposed ``master_key`` or a non-zero ``crypto_kdf_derive_from_key`` return code must raise ``SodiumError``. In addition, the verification suite must execute automated RFC 8032, RFC 7748, and Project Wycheproof edge-case test vectors covering small-order points, non-canonical encodings, and malleable signatures.
+  For Phase 2 (``v0.2.2``), the library must implement BLAKE2b-based hierarchical subkey derivation via ``crypto_kdf_derive_from_key`` accepting a 32-byte guarded master key, a 64-bit ``subkey_id``, and an 8-byte ``context`` string, returning isolated subkeys between 16 and 64 bytes directly inside ``SecureBuffer`` guarded memory without touching the Crystal GC heap. Supplying an invalid ``master_key.size`` (``!= 32``), ``context.bytesize`` (``!= 8``), or ``subkey_size`` (``< 16`` or ``> 64``) must raise ``ArgumentError``, whereas a disposed ``master_key`` or a non-zero ``crypto_kdf_derive_from_key`` return code must raise ``SodiumError``. In addition, the verification suite must execute automated RFC 8032, RFC 7748, and Project Wycheproof edge-case test vectors covering small-order points, non-canonical encodings, and malleable signatures.

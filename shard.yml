@@ -1,12 +1,12 @@
 name: crystal-ecc-constant
-version: 0.2.1
+version: 0.2.2
 
 authors:
   - Rénich Bon Ćirić <renich@woralelandia.com>
 
 crystal: '>= 1.21.0'
 
-license: AGPL-3.0-or-later
+license: GPL-3.0-or-later
 
 development_dependencies:
   ameba:

@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <a href="https://gitlab.com/renich/crystal-ecc-constant/-/releases"><img src="https://img.shields.io/badge/version-v0.2.1-blue.svg?style=flat-square" alt="Version 0.2.1" /></a>
+  <a href="https://gitlab.com/renich/crystal-ecc-constant/-/releases"><img src="https://img.shields.io/badge/version-v0.2.2-blue.svg?style=flat-square" alt="Version 0.2.2" /></a>
   <a href="https://crystal-lang.org/"><img src="https://img.shields.io/badge/crystal-%3E%3D%201.21.0-black.svg?style=flat-square&logo=crystal&logoColor=white" alt="Crystal >= 1.21.0" /></a>
   <a href="https://gitlab.com/renich/crystal-ecc-constant/-/pipelines"><img src="https://img.shields.io/badge/pipeline-passing-brightgreen.svg?style=flat-square&logo=gitlab" alt="GitLab CI Passing" /></a>
-  <a href="https://gitlab.com/renich/crystal-ecc-constant"><img src="https://img.shields.io/badge/specs-25%20passing-success.svg?style=flat-square&logo=crystal" alt="Specs Passing" /></a>
+  <a href="https://gitlab.com/renich/crystal-ecc-constant"><img src="https://img.shields.io/badge/specs-30%20passing-success.svg?style=flat-square&logo=crystal" alt="Specs Passing" /></a>
   <a href="https://github.com/crystal-ameba/ameba"><img src="https://img.shields.io/badge/ameba-0%20violations-brightgreen.svg?style=flat-square" alt="Ameba Clean" /></a>
   <a href="https://github.com/kdairatchi/flaw"><img src="https://img.shields.io/badge/flaw-0%20findings-brightgreen.svg?style=flat-square" alt="Flaw Clean" /></a>
 </p>
@@ -30,14 +30,14 @@
 
 ## Overview
 
-**crystal-ecc-constant** is a constant-time Elliptic Curve Cryptography shard for Crystal binding directly to `libsodium` for Ed25519 digital signatures and X25519 ECDH key agreement with complete garbage collector secret isolation. All private keys and unconsumed shared secrets reside exclusively inside `sodium_malloc` guarded memory with `mlock` pinning, surrounding canary and guard pages, `sodium_mprotect_readonly` page locks, `Sync::Mutex` FFI synchronization, and deterministic `sodium_memzero` wiping.
+**crystal-ecc-constant** is a constant-time Elliptic Curve Cryptography shard for Crystal binding directly to `libsodium` for Ed25519 and Ed25519ph digital signatures, X25519 ECDH key agreement, and BLAKE2b guarded subkey derivation with complete garbage collector secret isolation. All private keys, streaming hash states, KDF subkeys, and unconsumed shared secrets reside exclusively inside `sodium_malloc` guarded memory with `mlock` pinning, surrounding canary and guard pages, `sodium_mprotect_readonly` page locks, `Sync::Mutex` FFI synchronization, and deterministic `sodium_memzero` wiping.
 
 ### Key Highlights
 
-1. **Guarded Memory & Hardware Page Protection**: Secret material is allocated via `sodium_malloc`, locked read-only via `sodium_mprotect_readonly` while at rest, and deterministically zeroized via `sodium_memzero` prior to `sodium_free`.
-2. **Constant-Time Ed25519 & X25519 Primitives**: Random keypair generation, deterministic 32-byte seed derivation, 64-byte detached Ed25519 signatures, Curve25519 ECDH key exchange with small-order point rejection, and `sodium_memcmp` constant-time equality.
+1. **Guarded Memory & Hardware Page Protection**: Secret material (`SecureBuffer`, `PrivateKeyPointer`, `SharedSecret`, and `Ed25519PhStream`) is allocated via `sodium_malloc`, locked read-only via `sodium_mprotect_readonly` while at rest, and deterministically zeroized via `sodium_memzero` prior to `sodium_free`.
+2. **Constant-Time Ed25519, Ed25519ph, X25519 & KDF Primitives**: Random keypair generation, deterministic 32-byte seed derivation, 64-byte detached Ed25519 signatures, multi-part pre-hashed `Ed25519ph` streaming signatures (`Ed25519PhStream`), Curve25519 ECDH key exchange with small-order point rejection, BLAKE2b subkey derivation (`Kdf.derive_subkey`), and `sodium_memcmp` constant-time equality.
 3. **Thread-Safe Parallel Execution**: Synchronized across Crystal 1.21 `Fiber::ExecutionContext::Parallel` threads via `Sync::Mutex` and `Atomic(Bool)` double-checked initialization.
-4. **Multi-Tier Documentation Suite**: Complete Sphinx technical, functional, business, ADR, D2 architectural and roadmap diagrams, and compiler-generated API reference documentation.
+4. **Multi-Tier Documentation & Wycheproof Verification**: Validated against RFC 8032, RFC 7748, and Project Wycheproof edge-case vectors alongside a complete Sphinx technical, functional, business, ADR, D2 diagram, and Crystal API documentation suite.
 
 ---
 
@@ -49,7 +49,7 @@ Add `crystal-ecc-constant` to your application's `shard.yml`:
 dependencies:
   crystal-ecc-constant:
     gitlab: renich/crystal-ecc-constant
-    version: ~> 0.2.1
+    version: ~> 0.2.2
 ```
 
 Then install the shard (ensure `libsodium-devel` is installed on your host):
@@ -74,14 +74,24 @@ begin
   message = "Strictly FIDO2 assertion payload".to_slice
   signature = keypair.sign(message)
   puts "Signature valid: #{keypair.verify(message, signature)}"
+
+  # Multi-part Ed25519ph Streaming Signature in Guarded Memory
+  signer = Crystal::Ecc::Constant::Ed25519PhStream.new
+  signer.update("Chunk 1: ".to_slice).update("Chunk 2".to_slice)
+  ph_sig = signer.final_sign(keypair)
+
+  verifier = Crystal::Ecc::Constant::Ed25519PhStream.new
+  verifier.update("Chunk 1: Chunk 2".to_slice)
+  puts "Ed25519ph valid: #{verifier.final_verify(keypair.public_key, ph_sig)}"
 ensure
   keypair.dispose
 end
 
-# Deterministic Seed Derivation
-seed = Random::Secure.random_bytes(32)
-persistent_key = Crystal::Ecc::Constant::Ed25519KeyPair.from_seed(seed)
-persistent_key.dispose
+# Guarded BLAKE2b Subkey Derivation (crypto_kdf)
+master_key = Crystal::Ecc::Constant::SecureBuffer.from_bytes(Random::Secure.random_bytes(32))
+subkey = Crystal::Ecc::Constant::Kdf.derive_subkey(master_key, 1_u64, "ECC_KDF1", 32)
+subkey.dispose
+master_key.dispose
 
 # X25519 ECDH Key Exchange (Block-Scoped Auto-Disposal)
 alice = Crystal::Ecc::Constant::X25519KeyPair.generate

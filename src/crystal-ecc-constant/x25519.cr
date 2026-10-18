@@ -58,6 +58,11 @@ module Crystal::Ecc::Constant
       end
     end
 
+    # Alias for `#diffie_hellman` computing a 32-byte ECDH `SharedSecret` in guarded memory.
+    def shared_secret(other_public_key : PublicKey) : SharedSecret
+      diffie_hellman(other_public_key)
+    end
+
     # Returns `true` if the underlying private key has been wiped and freed.
     def disposed? : Bool
       @private_key.disposed?

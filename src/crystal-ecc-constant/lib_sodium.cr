@@ -2,6 +2,11 @@ module Crystal::Ecc::Constant
   # Low-level C ABI bindings to libsodium.
   @[Link("sodium")]
   lib LibSodium
+    # 208-byte SHA-512 streaming state for Ed25519ph signatures.
+    struct CryptoSignEd25519phState
+      bytes : StaticArray(UInt8, 208)
+    end
+
     fun sodium_init : Int32
     fun sodium_version_string : UInt8*
     fun sodium_library_version_major : Int32
@@ -12,10 +17,32 @@ module Crystal::Ecc::Constant
     fun crypto_sign_detached(sig : UInt8*, siglen_p : UInt64*, m : UInt8*, mlen : UInt64, sk : UInt8*) : Int32
     fun crypto_sign_verify_detached(sig : UInt8*, m : UInt8*, mlen : UInt64, pk : UInt8*) : Int32
 
+    fun crypto_sign_ed25519ph_init(state : CryptoSignEd25519phState*) : Int32
+    fun crypto_sign_ed25519ph_update(state : CryptoSignEd25519phState*, m : UInt8*, mlen : UInt64) : Int32
+    fun crypto_sign_ed25519ph_final_create(
+      state : CryptoSignEd25519phState*,
+      sig : UInt8*,
+      siglen_p : UInt64*,
+      sk : UInt8*,
+    ) : Int32
+    fun crypto_sign_ed25519ph_final_verify(
+      state : CryptoSignEd25519phState*,
+      sig : UInt8*,
+      pk : UInt8*,
+    ) : Int32
+
     fun crypto_box_keypair(pk : UInt8*, sk : UInt8*) : Int32
     fun crypto_box_seed_keypair(pk : UInt8*, sk : UInt8*, seed : UInt8*) : Int32
     fun crypto_scalarmult(q : UInt8*, n : UInt8*, p : UInt8*) : Int32
     fun crypto_scalarmult_base(q : UInt8*, n : UInt8*) : Int32
+
+    fun crypto_kdf_derive_from_key(
+      subkey : UInt8*,
+      subkey_len : LibC::SizeT,
+      subkey_id : UInt64,
+      ctx : UInt8*,
+      key : UInt8*,
+    ) : Int32
 
     fun sodium_memcmp(b1 : UInt8*, b2 : UInt8*, len : LibC::SizeT) : Int32
     fun sodium_memzero(pnt : Void*, len : LibC::SizeT)

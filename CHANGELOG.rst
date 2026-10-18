@@ -10,9 +10,16 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+[0.2.2] - 2026-10-18
+====================
+
 .. rubric:: Added
 
-- Phase 2 (``v0.3.0``) specifications defining ``[FUNC-006]`` (``Ed25519ph`` pre-hashed streaming signatures in guarded memory) and ``[FUNC-007]`` (``crypto_kdf`` guarded subkey derivation and RFC 8032, RFC 7748, and Wycheproof edge-case vector suite) with 1:1 technical traceability (``[TECH-001]``..``[TECH-007]``) and ``ADR-002``.
+- Implemented ``Ed25519PhStream`` (``[FUNC-006]``, ``[TECH-005]``, ``[TECH-006]``) for multi-part pre-hashed ``Ed25519ph`` (RFC 8032 Section 5.1) streaming signatures and verification in 208-byte ``sodium_malloc`` guarded memory with ``sodium_mprotect_readonly`` page locks and ``Sync::Mutex`` FFI synchronization.
+- Implemented ``Kdf.derive_subkey`` and ``SecureBuffer`` (``[FUNC-007]``, ``[TECH-005]``, ``[TECH-007]``) for BLAKE2b-based deterministic guarded subkey derivation (16..64 bytes) from a 32-byte master key via ``crypto_kdf_derive_from_key``.
+- Added ``Ed25519KeyPair.verify_detached`` and ``X25519KeyPair#shared_secret`` API entry points.
+- Added RFC 8032 (``Ed25519`` and ``Ed25519ph``), RFC 7748 (``X25519`` iterative scalar multiplication), and Project Wycheproof edge-case test vectors verifying canonical ``S < L`` enforcement and all 8 low-order Curve25519 points.
+- Phase 2 (``v0.2.2``) specifications defining ``[FUNC-006]`` and ``[FUNC-007]`` with 1:1 technical traceability (``[TECH-001]``..``[TECH-007]``) and ``ADR-002``.
 - Dependency-tracked phased roadmaps (``TASK-101``..``TASK-105`` and ``TASK-201``..``TASK-204``) with explicit ``Fulfills``, ``Blocked By``, ``Unblocks``, and ``Critical Path`` chains.
 - Declarative D2 architecture and roadmap diagrams (``docs/diagrams/architecture.d2``, ``docs/diagrams/roadmaps/roadmap.d2``, ``docs/diagrams/roadmaps/phase-1-mvp.d2``, and ``docs/diagrams/roadmaps/phase-2-enhancement.d2``) compiled to SVG.
 - Visual brand assets ``assets/banner.svg`` and ``assets/icon.svg`` and full ``../init/lib`` alignment for ``README.md`` and ``CONTRIBUTING.rst``.
