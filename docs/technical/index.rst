@@ -1,11 +1,12 @@
+=======================
 Technical Documentation
 =======================
 
 Welcome to the technical documentation for ``crystal-ecc-constant``.
-This module implements the libsodium FFI with a secure, reference-counted ownership model.
+This module implements the libsodium FFI with a secure, reference-semantic ownership model.
 
 Contents
---------
+========
 
 .. toctree::
    :maxdepth: 2
@@ -13,3 +14,5 @@ Contents
 
    architecture
    implementation-details
+   spec
+   CODE_OF_HONOR

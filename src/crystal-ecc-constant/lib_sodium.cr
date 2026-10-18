@@ -1,8 +1,11 @@
 module Crystal::Ecc::Constant
+  # Low-level C ABI bindings to libsodium.
   @[Link("sodium")]
   lib LibSodium
     fun sodium_init : Int32
     fun sodium_version_string : UInt8*
+    fun sodium_library_version_major : Int32
+    fun sodium_library_version_minor : Int32
 
     fun crypto_sign_keypair(pk : UInt8*, sk : UInt8*) : Int32
     fun crypto_sign_seed_keypair(pk : UInt8*, sk : UInt8*, seed : UInt8*) : Int32

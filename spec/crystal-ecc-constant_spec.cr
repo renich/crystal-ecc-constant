@@ -1,5 +1,4 @@
 require "./spec_helper"
-require "../src/crystal-ecc-constant"
 
 describe Crystal::Ecc::Constant do
   describe "Type Design" do
@@ -20,7 +19,7 @@ describe Crystal::Ecc::Constant do
       end
     end
 
-    it "protects internal bytes against external mutation" do
+    it "protects internal bytes against external mutation via to_bytes and bytes" do
       bytes = Bytes.new(32, 7_u8)
       pk = Crystal::Ecc::Constant::PublicKey.new(bytes)
       bytes[0] = 99_u8
@@ -29,6 +28,10 @@ describe Crystal::Ecc::Constant do
       extracted = pk.to_bytes
       extracted[0] = 42_u8
       pk.to_bytes[0].should eq(7_u8)
+
+      defensive_copy = pk.bytes
+      defensive_copy[0] = 0_u8
+      pk.bytes[0].should eq(7_u8)
     end
 
     it "rejects invalid signature sizes" do
@@ -37,7 +40,7 @@ describe Crystal::Ecc::Constant do
       end
     end
 
-    it "protects internal signature bytes against external mutation" do
+    it "protects internal signature bytes against external mutation via to_bytes and bytes" do
       bytes = Bytes.new(64, 5_u8)
       sig = Crystal::Ecc::Constant::Signature.new(bytes)
       bytes[0] = 99_u8
@@ -46,6 +49,10 @@ describe Crystal::Ecc::Constant do
       extracted = sig.to_bytes
       extracted[0] = 42_u8
       sig.to_bytes[0].should eq(5_u8)
+
+      defensive_copy = sig.bytes
+      defensive_copy[0] = 0_u8
+      sig.bytes[0].should eq(5_u8)
     end
   end
 
@@ -65,9 +72,12 @@ describe Crystal::Ecc::Constant do
         signature = keypair.sign(message)
 
         Crystal::Ecc::Constant::Sodium.verify_ed25519(keypair.public_key, message, signature).should be_true
+        keypair.public_key.verify_ed25519(message, signature).should be_true
+        keypair.verify(message, signature).should be_true
 
         tampered = "Strictly FIDO2 assertioN".to_slice
         Crystal::Ecc::Constant::Sodium.verify_ed25519(keypair.public_key, tampered, signature).should be_false
+        keypair.verify(tampered, signature).should be_false
       ensure
         keypair.dispose
       end
@@ -95,11 +105,23 @@ describe Crystal::Ecc::Constant do
       end
     end
 
+    it "rejects mismatched PrivateKeyPointer size on initialization" do
+      pk = Crystal::Ecc::Constant::PublicKey.new(Bytes.new(32))
+      bad_sk = Crystal::Ecc::Constant::PrivateKeyPointer.allocate(32) { }
+      begin
+        expect_raises(ArgumentError, /Invalid Ed25519 private key size/) do
+          Crystal::Ecc::Constant::Ed25519KeyPair.new(pk, bad_sk)
+        end
+      ensure
+        bad_sk.dispose
+      end
+    end
+
     it "raises when signing with a disposed keypair" do
       keypair = Crystal::Ecc::Constant::Ed25519KeyPair.generate
       keypair.dispose
 
-      expect_raises(Crystal::Ecc::Constant::SodiumError, "Key pair has been disposed") do
+      expect_raises(Crystal::Ecc::Constant::SodiumError, "Key has been disposed") do
         keypair.sign("test".to_slice)
       end
     end
@@ -161,6 +183,73 @@ describe Crystal::Ecc::Constant do
       ensure
         kp1.dispose
         kp2.dispose
+      end
+    end
+
+    it "rejects X25519 seed with invalid length" do
+      expect_raises(ArgumentError, /must be exactly 32 bytes/) do
+        Crystal::Ecc::Constant::X25519KeyPair.from_seed(Bytes.new(16))
+      end
+    end
+
+    it "rejects mismatched PrivateKeyPointer size on initialization" do
+      pk = Crystal::Ecc::Constant::PublicKey.new(Bytes.new(32))
+      bad_sk = Crystal::Ecc::Constant::PrivateKeyPointer.allocate(64) { }
+      begin
+        expect_raises(ArgumentError, /Invalid X25519 private key size/) do
+          Crystal::Ecc::Constant::X25519KeyPair.new(pk, bad_sk)
+        end
+      ensure
+        bad_sk.dispose
+      end
+    end
+
+    it "raises when performing diffie_hellman with a disposed keypair" do
+      alice = Crystal::Ecc::Constant::X25519KeyPair.generate
+      bob = Crystal::Ecc::Constant::X25519KeyPair.generate
+      alice.dispose
+
+      begin
+        expect_raises(Crystal::Ecc::Constant::SodiumError, "Key has been disposed") do
+          alice.diffie_hellman(bob.public_key)
+        end
+      ensure
+        bob.dispose
+      end
+    end
+
+    it "rejects an all-zero weak public key during diffie_hellman" do
+      alice = Crystal::Ecc::Constant::X25519KeyPair.generate
+      weak_pk = Crystal::Ecc::Constant::PublicKey.new(Bytes.new(32, 0_u8))
+
+      begin
+        expect_raises(Crystal::Ecc::Constant::SodiumError, /weak or invalid key/) do
+          alice.diffie_hellman(weak_pk)
+        end
+      ensure
+        alice.dispose
+      end
+    end
+
+    it "raises when consuming a disposed SharedSecret" do
+      alice = Crystal::Ecc::Constant::X25519KeyPair.generate
+      bob = Crystal::Ecc::Constant::X25519KeyPair.generate
+
+      begin
+        shared1 = alice.diffie_hellman(bob.public_key)
+        shared1.dispose
+        expect_raises(Crystal::Ecc::Constant::SodiumError, "Shared secret already disposed") do
+          shared1.consume
+        end
+
+        shared2 = alice.diffie_hellman(bob.public_key)
+        shared2.dispose
+        expect_raises(Crystal::Ecc::Constant::SodiumError, "Shared secret already disposed") do
+          shared2.consume(&.size)
+        end
+      ensure
+        alice.dispose
+        bob.dispose
       end
     end
   end

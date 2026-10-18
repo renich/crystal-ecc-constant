@@ -12,3 +12,5 @@ scratch.cr
 
 # Libraries don't lock dependencies
 /shard.lock
+/lib64_local/
+/lib_local/

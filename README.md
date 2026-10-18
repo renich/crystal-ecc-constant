@@ -11,7 +11,7 @@ A high-performance, strictly constant-time **Elliptic Curve Cryptography (ECC)**
 - **Deterministic Key Derivation**: Derive Ed25519 and X25519 keypairs from 32-byte cryptographic seeds (`from_seed`).
 - **X25519 Diffie-Hellman Key Exchange**: Fast ECDH shared secret derivation with block-scoped memory sanitization or copy-on-consume semantics.
 - **Constant-Time Comparison**: Secure buffer comparisons using `sodium_memcmp` to eliminate timing side-channels.
-- **Strict Memory Safety & Lifetime Tracking**: Private keys and shared secrets reside in pinned secure memory (`sodium_malloc`) with guard pages, explicitly sanitized via `sodium_memzero` upon disposal.
+- **Strict Memory Safety & Lifetime Tracking**: Private keys and shared secrets reside in pinned secure memory (`sodium_malloc`) with guard pages and read-only page protection (`sodium_mprotect_readonly`), explicitly sanitized via `sodium_memzero` upon disposal.
 - **Multithreading Concurrency**: Protected via Crystal 1.21 `Sync::Mutex` and atomic initialization.
 
 ## Installation
@@ -21,8 +21,8 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   crystal-ecc-constant:
-    github: renich/crystal-ecc-constant
-    version: ~> 0.1.2
+    gitlab: renich/crystal-ecc-constant
+    version: ~> 0.2.0
 ```
 
 Then run:
@@ -46,7 +46,7 @@ keypair = Crystal::Ecc::Constant::Ed25519KeyPair.generate
 message = "Strictly FIDO2 assertion payload".to_slice
 
 signature = keypair.sign(message)
-is_valid = Crystal::Ecc::Constant::Sodium.verify_ed25519(keypair.public_key, message, signature)
+is_valid = keypair.verify(message, signature)
 puts "Signature valid: #{is_valid}"
 
 keypair.dispose
@@ -54,6 +54,7 @@ keypair.dispose
 # Deterministic Seed Derivation
 seed = Random::Secure.random_bytes(32)
 persistent_key = Crystal::Ecc::Constant::Ed25519KeyPair.from_seed(seed)
+persistent_key.dispose
 
 # X25519 ECDH Key Exchange (Block-Scoped Consumption)
 alice = Crystal::Ecc::Constant::X25519KeyPair.generate

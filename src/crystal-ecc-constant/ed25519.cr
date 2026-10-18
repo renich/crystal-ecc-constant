@@ -1,68 +1,75 @@
 module Crystal::Ecc::Constant
+  # Ed25519 key pair holding a public key and a pinned secure memory private key.
   class Ed25519KeyPair
+    # The 32-byte Ed25519 public key.
     getter public_key : PublicKey
 
-    def initialize(@public_key : PublicKey, @private_key : PrivateKeyPointer)
+    # Initializes an Ed25519 key pair from a `PublicKey` and a 64-byte `PrivateKeyPointer`.
+    def initialize(@public_key : PublicKey, @private_key : PrivateKeyPointer) : Nil
+      return if @private_key.size == 64
+
+      raise ArgumentError.new("Invalid Ed25519 private key size: expected 64 bytes, got #{@private_key.size}")
     end
 
+    # Generates a new random Ed25519 key pair in libsodium secure memory.
     def self.generate : self
-      Sodium.ensure_initialized
-      sk_ptr = LibSodium.sodium_malloc(64_u64)
-      raise SodiumError.new("Failed to allocate secure memory") if sk_ptr.null?
-
-      sk = sk_ptr.as(Pointer(UInt8))
       pk = Bytes.new(32)
-
-      if LibSodium.crypto_sign_keypair(pk.to_unsafe, sk) != 0
-        LibSodium.sodium_free(sk_ptr)
-        raise SodiumError.new("Failed to generate Ed25519 keypair")
+      sk_ptr = PrivateKeyPointer.allocate(64) do |secret_key|
+        if LibSodium.crypto_sign_keypair(pk.to_unsafe, secret_key) != 0
+          raise SodiumError.new("Failed to generate Ed25519 keypair")
+        end
       end
 
-      new(PublicKey.new(pk), PrivateKeyPointer.new(sk, 64))
+      new(PublicKey.new(pk), sk_ptr)
     end
 
+    # Derives a deterministic Ed25519 key pair from a 32-byte cryptographic `seed`.
     def self.from_seed(seed : Bytes) : self
-      Sodium.ensure_initialized
       raise ArgumentError.new("Ed25519 seed must be exactly 32 bytes, got #{seed.size}") unless seed.size == 32
 
-      sk_ptr = LibSodium.sodium_malloc(64_u64)
-      raise SodiumError.new("Failed to allocate secure memory") if sk_ptr.null?
-
-      sk = sk_ptr.as(Pointer(UInt8))
       pk = Bytes.new(32)
-
-      if LibSodium.crypto_sign_seed_keypair(pk.to_unsafe, sk, seed.to_unsafe) != 0
-        LibSodium.sodium_free(sk_ptr)
-        raise SodiumError.new("Failed to derive Ed25519 keypair from seed")
+      sk_ptr = PrivateKeyPointer.allocate(64) do |secret_key|
+        if LibSodium.crypto_sign_seed_keypair(pk.to_unsafe, secret_key, seed.to_unsafe) != 0
+          raise SodiumError.new("Failed to derive Ed25519 keypair from seed")
+        end
       end
 
-      new(PublicKey.new(pk), PrivateKeyPointer.new(sk, 64))
+      new(PublicKey.new(pk), sk_ptr)
     end
 
+    # Produces a 64-byte detached Ed25519 signature for `message`.
     def sign(message : Bytes) : Signature
-      raise SodiumError.new("Key pair has been disposed") if @private_key.disposed?
-
       sig = Bytes.new(64)
       siglen = 0_u64
-      res = LibSodium.crypto_sign_detached(
-        sig.to_unsafe,
-        pointerof(siglen),
-        message.to_unsafe,
-        message.size.to_u64,
-        @private_key.pointer
-      )
 
-      if res != 0
-        raise SodiumError.new("Failed to sign message")
+      @private_key.with_pointer do |secret_key|
+        res = LibSodium.crypto_sign_detached(
+          sig.to_unsafe,
+          pointerof(siglen),
+          message.to_unsafe,
+          message.size.to_u64,
+          secret_key
+        )
+
+        if res != 0
+          raise SodiumError.new("Failed to sign message")
+        end
       end
 
       Signature.new(sig)
     end
 
+    # Verifies an Ed25519 detached `signature` for `message` using this key pair's public key.
+    def verify(message : Bytes, signature : Signature) : Bool
+      @public_key.verify_ed25519(message, signature)
+    end
+
+    # Returns `true` if the underlying private key has been wiped and freed.
     def disposed? : Bool
       @private_key.disposed?
     end
 
+    # Wipes and frees the underlying private key in secure memory.
     def dispose : Nil
       @private_key.dispose
     end

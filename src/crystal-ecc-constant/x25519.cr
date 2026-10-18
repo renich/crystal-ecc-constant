@@ -1,66 +1,69 @@
 module Crystal::Ecc::Constant
+  # X25519 key pair for Elliptic Curve Diffie-Hellman (ECDH) key exchange.
   class X25519KeyPair
+    # The 32-byte X25519 public key.
     getter public_key : PublicKey
 
-    def initialize(@public_key : PublicKey, @private_key : PrivateKeyPointer)
+    # Initializes an X25519 key pair from a `PublicKey` and a 32-byte `PrivateKeyPointer`.
+    def initialize(@public_key : PublicKey, @private_key : PrivateKeyPointer) : Nil
+      return if @private_key.size == 32
+
+      raise ArgumentError.new("Invalid X25519 private key size: expected 32 bytes, got #{@private_key.size}")
     end
 
+    # Generates a new random X25519 key pair in libsodium secure memory.
     def self.generate : self
-      Sodium.ensure_initialized
-      sk_ptr = LibSodium.sodium_malloc(32_u64)
-      raise SodiumError.new("Failed to allocate secure memory") if sk_ptr.null?
-
-      sk = sk_ptr.as(Pointer(UInt8))
       pk = Bytes.new(32)
-
-      if LibSodium.crypto_box_keypair(pk.to_unsafe, sk) != 0
-        LibSodium.sodium_free(sk_ptr)
-        raise SodiumError.new("Failed to generate X25519 keypair")
+      sk_ptr = PrivateKeyPointer.allocate(32) do |secret_key|
+        if LibSodium.crypto_box_keypair(pk.to_unsafe, secret_key) != 0
+          raise SodiumError.new("Failed to generate X25519 keypair")
+        end
       end
 
-      new(PublicKey.new(pk), PrivateKeyPointer.new(sk, 32))
+      new(PublicKey.new(pk), sk_ptr)
     end
 
+    # Derives a deterministic X25519 key pair from a 32-byte cryptographic `seed`.
     def self.from_seed(seed : Bytes) : self
-      Sodium.ensure_initialized
       raise ArgumentError.new("X25519 seed must be exactly 32 bytes, got #{seed.size}") unless seed.size == 32
 
-      sk_ptr = LibSodium.sodium_malloc(32_u64)
-      raise SodiumError.new("Failed to allocate secure memory") if sk_ptr.null?
-
-      sk = sk_ptr.as(Pointer(UInt8))
       pk = Bytes.new(32)
-
-      if LibSodium.crypto_box_seed_keypair(pk.to_unsafe, sk, seed.to_unsafe) != 0
-        LibSodium.sodium_free(sk_ptr)
-        raise SodiumError.new("Failed to derive X25519 keypair from seed")
+      sk_ptr = PrivateKeyPointer.allocate(32) do |secret_key|
+        if LibSodium.crypto_box_seed_keypair(pk.to_unsafe, secret_key, seed.to_unsafe) != 0
+          raise SodiumError.new("Failed to derive X25519 keypair from seed")
+        end
       end
 
-      new(PublicKey.new(pk), PrivateKeyPointer.new(sk, 32))
+      new(PublicKey.new(pk), sk_ptr)
     end
 
+    # Computes a 32-byte ECDH `SharedSecret` with `other_public_key` in libsodium secure memory.
     def diffie_hellman(other_public_key : PublicKey) : SharedSecret
-      raise SodiumError.new("Key pair has been disposed") if @private_key.disposed?
+      @private_key.with_pointer do |secret_key|
+        shared = SharedSecret.new(32)
+        res = shared.with_unsafe_ptr do |sh_ptr|
+          LibSodium.crypto_scalarmult(
+            sh_ptr,
+            secret_key,
+            other_public_key.raw_bytes.to_unsafe
+          )
+        end
 
-      shared = SharedSecret.new(32)
-      res = LibSodium.crypto_scalarmult(
-        shared.unsafe_ptr,
-        @private_key.pointer,
-        other_public_key.bytes.to_unsafe
-      )
+        if res != 0
+          shared.dispose
+          raise SodiumError.new("Failed to compute shared secret: weak or invalid key")
+        end
 
-      if res != 0
-        shared.dispose
-        raise SodiumError.new("Failed to compute shared secret: weak or invalid key")
+        shared
       end
-
-      shared
     end
 
+    # Returns `true` if the underlying private key has been wiped and freed.
     def disposed? : Bool
       @private_key.disposed?
     end
 
+    # Wipes and frees the underlying private key in secure memory.
     def dispose : Nil
       @private_key.dispose
     end

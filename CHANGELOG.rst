@@ -4,11 +4,33 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
-The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`_,
-and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
+The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`__,
+and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`__.
 
 [Unreleased]
 ============
+
+[0.2.0] - 2026-10-18
+====================
+
+.. rubric:: Security
+
+- Enforced runtime ``libsodium`` major library version check (``>= 10``) in ``Sodium.init``.
+- Eliminated TOCTOU Use-After-Free race conditions between ``Ed25519KeyPair#sign``, ``X25519KeyPair#diffie_hellman``, ``SharedSecret#consume``, and ``dispose`` by synchronizing the entire FFI execution and consumption span under ``Sync::Mutex``.
+- Enforced hardware page protection via ``sodium_mprotect_readonly`` and ``sodium_mprotect_readwrite`` across ``PrivateKeyPointer`` and ``SharedSecret`` lifecycles.
+- Prevented in-place mutation of ``PublicKey`` and ``Signature`` byte slices by returning defensive copies from ``#bytes`` while retaining internal ``protected def raw_bytes`` zero-copy reads.
+- Validated ``PrivateKeyPointer`` buffer sizes in ``Ed25519KeyPair#initialize`` (64 bytes) and ``X25519KeyPair#initialize`` (32 bytes).
+
+.. rubric:: Added
+
+- Bound ``sodium_library_version_major`` and ``sodium_library_version_minor`` in ``LibSodium``.
+- Added ``PublicKey#verify_ed25519`` and ``Ed25519KeyPair#verify`` convenience verification methods.
+- Added ``PrivateKeyPointer.allocate``, ``PrivateKeyPointer#with_pointer``, and ``SharedSecret#with_unsafe_ptr`` for synchronized secure memory management.
+
+.. rubric:: Changed
+
+- Updated minimum Crystal version requirement to ``>= 1.21.0``.
+- Overhauled ``GNUmakefile``, ``.ameba.yml``, ``.gitlab-ci.yml``, and reStructuredText technical documentation to pass strict static analysis and linting gates.
 
 [0.1.2] - 2026-09-19
 ====================
