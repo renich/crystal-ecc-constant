@@ -5,7 +5,7 @@ Release Procedure and Versioning Playbook
 Overview
 --------
 
-This document defines the deterministic, repeatable release workflow for ``crystal-ecc-constant``. It enforces Semantic Versioning (SemVer 2.0.0), Keep a Changelog 1.1.0 compliance, multi-file version alignment, local pre-push linting, signed GPG Git tags, and automated GitLab CI release artifact creation.
+This document defines the deterministic, repeatable release workflow for ``crystal-ecc-constant``. It enforces Semantic Versioning 2.0.0, Keep a Changelog 1.1.0 compliance, multi-file version alignment, local pre-push linting, signed GPG Git tags, and automated GitLab CI release artifact creation.
 
 Requirement Mapping
 -------------------
@@ -15,7 +15,7 @@ Fulfills ``[FUNC-005]``.
 Multi-File Version Alignment Checklist
 --------------------------------------
 
-Prior to tagging any release, the version string (e.g. ``0.2.1``) must be updated across the codebase:
+Prior to tagging any release, the version string must be updated across the codebase:
 
 #. **``shard.yml``**:
 

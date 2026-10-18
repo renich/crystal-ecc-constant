@@ -1,0 +1,66 @@
+direction: right
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 4
+    pad: 40
+  }
+}
+
+classes: {
+  milestone_box: {
+    style: {
+      stroke: "#2B6CB0"
+      stroke-width: 2
+      border-radius: 8
+      fill: "#F7FAFC"
+    }
+  }
+  done_task: {
+    shape: rectangle
+    style: {
+      stroke: "#2F855A"
+      stroke-width: 2
+      border-radius: 6
+      fill: "#F0FFF4"
+      font-color: "#22543D"
+      bold: true
+    }
+  }
+}
+
+m1_1: "Milestone 1.1: Core Cryptographic Primitives & Guarded Memory" {
+  class: milestone_box
+
+  task101: "TASK-101: LibSodium ABI & Atomic Init\nFulfills [FUNC-004] [FUNC-005]\nImplements [TECH-004]" {
+    class: done_task
+  }
+
+  task102: "TASK-102: Guarded Memory Lifecycle\nFulfills [FUNC-001] [FUNC-005]\nImplements [TECH-001] [TECH-005]" {
+    class: done_task
+  }
+
+  task103: "TASK-103: Ed25519 Constant-Time Signatures\nFulfills [FUNC-002]\nImplements [TECH-002] [TECH-005]" {
+    class: done_task
+  }
+
+  task104: "TASK-104: X25519 ECDH & SharedSecret#consume\nFulfills [FUNC-003]\nImplements [TECH-002] [TECH-003] [TECH-005]" {
+    class: done_task
+  }
+
+  task101 -> task102: "Unblocks"
+  task102 -> task103: "Unblocks"
+  task102 -> task104: "Unblocks"
+}
+
+m1_2: "Milestone 1.2: Quality Gates & Documentation Portal" {
+  class: milestone_box
+
+  task105: "TASK-105: Build System, SAST & Sphinx Portal\nFulfills [FUNC-005]\nImplements [TECH-004]" {
+    class: done_task
+  }
+}
+
+m1_1.task103 -> m1_2.task105: "Unblocks"
+m1_1.task104 -> m1_2.task105: "Unblocks"

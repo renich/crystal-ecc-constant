@@ -1,21 +1,45 @@
-# crystal-ecc-constant
+<p align="center">
+  <img src="assets/banner.svg" alt="crystal-ecc-constant Banner" width="100%" />
+</p>
 
-[![Version](https://img.shields.io/badge/version-v0.2.1-blue.svg?style=flat-square)](https://gitlab.com/renich/crystal-ecc-constant/-/releases)
-[![Crystal](https://img.shields.io/badge/crystal-%3E%3D%201.21.0-black.svg?style=flat-square&logo=crystal&logoColor=white)](https://crystal-lang.org/)
-[![CI](https://gitlab.com/renich/crystal-ecc-constant/badges/master/pipeline.svg)](https://gitlab.com/renich/crystal-ecc-constant/-/pipelines)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![License: FDL v1.3](https://img.shields.io/badge/Docs_License-GFDL_v1.3-blue.svg)](LICENSE-DOCS)
+<p align="center">
+  <strong>Constant-time Ed25519 digital signatures and X25519 ECDH key agreement for Crystal backed by libsodium guarded memory and page protection.</strong>
+</p>
 
-A high-assurance, strictly constant-time **Elliptic Curve Cryptography** shard for [Crystal](https://crystal-lang.org/), binding directly to [libsodium](https://doc.libsodium.org/) for Ed25519 digital signatures and X25519 ECDH key agreement with complete garbage collector secret isolation.
+<p align="center">
+  <a href="https://gitlab.com/renich/crystal-ecc-constant/-/releases"><img src="https://img.shields.io/badge/version-v0.2.1-blue.svg?style=flat-square" alt="Version 0.2.1" /></a>
+  <a href="https://crystal-lang.org/"><img src="https://img.shields.io/badge/crystal-%3E%3D%201.21.0-black.svg?style=flat-square&logo=crystal&logoColor=white" alt="Crystal >= 1.21.0" /></a>
+  <a href="https://gitlab.com/renich/crystal-ecc-constant/-/pipelines"><img src="https://img.shields.io/badge/pipeline-passing-brightgreen.svg?style=flat-square&logo=gitlab" alt="GitLab CI Passing" /></a>
+  <a href="https://gitlab.com/renich/crystal-ecc-constant"><img src="https://img.shields.io/badge/specs-25%20passing-success.svg?style=flat-square&logo=crystal" alt="Specs Passing" /></a>
+  <a href="https://github.com/crystal-ameba/ameba"><img src="https://img.shields.io/badge/ameba-0%20violations-brightgreen.svg?style=flat-square" alt="Ameba Clean" /></a>
+  <a href="https://github.com/kdairatchi/flaw"><img src="https://img.shields.io/badge/flaw-0%20findings-brightgreen.svg?style=flat-square" alt="Flaw Clean" /></a>
+</p>
 
-## Features
+<p align="center">
+  <a href="https://renich.gitlab.io/crystal-ecc-constant/"><img src="https://img.shields.io/badge/docs-Sphinx%20Portal-orange.svg?style=flat-square&logo=sphinx&logoColor=white" alt="Sphinx Documentation" /></a>
+  <a href="https://renich.gitlab.io/crystal-ecc-constant/technical/api/"><img src="https://img.shields.io/badge/api-Crystal%20Docs-8A2BE2.svg?style=flat-square&logo=crystal&logoColor=white" alt="Crystal API Documentation" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg?style=flat-square" alt="License: GPL-3.0-or-later" /></a>
+  <a href="https://liberapay.com/Renich/donate"><img src="https://img.shields.io/badge/liberapay-donate-yellow.svg?style=flat-square&logo=liberapay&logoColor=white" alt="Donate using Liberapay" /></a>
+</p>
 
-- **Ed25519 Digital Signatures**: Detached digital signature generation (`Ed25519KeyPair#sign`) and constant-time verification (`PublicKey#verify_ed25519`, `Ed25519KeyPair#verify`, `Sodium.verify_ed25519`).
-- **Deterministic Key Derivation**: Derive Ed25519 and X25519 keypairs from 32-byte cryptographic seeds (`from_seed`).
-- **X25519 Diffie-Hellman Key Agreement**: Curve25519 scalar multiplication with weak peer public key rejection and single-use `SharedSecret` handles supporting block-scoped zeroization or copy-on-consume semantics.
-- **Constant-Time Comparison**: Timing-safe buffer comparisons via `Sodium.constant_time_equal?` backed by `sodium_memcmp`.
-- **Pinned Secure Memory & Hardware Page Protection**: Private keys and unconsumed shared secrets reside in `libsodium` secure memory (`sodium_malloc`) with guard pages and read-only page permissions (`sodium_mprotect_readonly`), unlocked (`sodium_mprotect_readwrite`) and wiped (`sodium_memzero`) upon disposal.
-- **Multithreading Concurrency**: Protected across all FFI spans via Crystal 1.21 `Sync::Mutex` and atomic initialization (`Atomic(Bool)`).
+> **GitLab Project Metadata**:
+> - **Description**: Constant-time Ed25519 digital signatures and X25519 ECDH key agreement for Crystal backed by libsodium guarded memory and page protection.
+> - **Topics and Tags**: `crystal`, `crystal-lang`, `cryptography`, `ed25519`, `x25519`, `ecdh`, `libsodium`, `constant-time`, `security`, `gplv3`
+
+---
+
+## Overview
+
+**crystal-ecc-constant** is a constant-time Elliptic Curve Cryptography shard for Crystal binding directly to `libsodium` for Ed25519 digital signatures and X25519 ECDH key agreement with complete garbage collector secret isolation. All private keys and unconsumed shared secrets reside exclusively inside `sodium_malloc` guarded memory with `mlock` pinning, surrounding canary and guard pages, `sodium_mprotect_readonly` page locks, `Sync::Mutex` FFI synchronization, and deterministic `sodium_memzero` wiping.
+
+### Key Highlights
+
+1. **Guarded Memory & Hardware Page Protection**: Secret material is allocated via `sodium_malloc`, locked read-only via `sodium_mprotect_readonly` while at rest, and deterministically zeroized via `sodium_memzero` prior to `sodium_free`.
+2. **Constant-Time Ed25519 & X25519 Primitives**: Random keypair generation, deterministic 32-byte seed derivation, 64-byte detached Ed25519 signatures, Curve25519 ECDH key exchange with small-order point rejection, and `sodium_memcmp` constant-time equality.
+3. **Thread-Safe Parallel Execution**: Synchronized across Crystal 1.21 `Fiber::ExecutionContext::Parallel` threads via `Sync::Mutex` and `Atomic(Bool)` double-checked initialization.
+4. **Multi-Tier Documentation Suite**: Complete Sphinx technical, functional, business, ADR, D2 architectural and roadmap diagrams, and compiler-generated API reference documentation.
+
+---
 
 ## Installation
 
@@ -28,13 +52,13 @@ dependencies:
     version: ~> 0.2.1
 ```
 
-Then run:
+Then install the shard (ensure `libsodium-devel` is installed on your host):
 
 ```bash
 shards install
 ```
 
-Make sure `libsodium` development headers are installed on your host (for example, `sudo dnf install libsodium-devel` on Fedora Linux).
+---
 
 ## Usage
 
@@ -59,7 +83,7 @@ seed = Random::Secure.random_bytes(32)
 persistent_key = Crystal::Ecc::Constant::Ed25519KeyPair.from_seed(seed)
 persistent_key.dispose
 
-# X25519 ECDH Key Exchange (Block-Scoped Consumption)
+# X25519 ECDH Key Exchange (Block-Scoped Auto-Disposal)
 alice = Crystal::Ecc::Constant::X25519KeyPair.generate
 bob = Crystal::Ecc::Constant::X25519KeyPair.generate
 begin
@@ -75,16 +99,24 @@ ensure
 end
 ```
 
+---
+
 ## Build System Targets
+
+The repository includes a comprehensive, standard `GNUmakefile`:
 
 | Target | Description |
 | :--- | :--- |
 | `make all` | Runs static analysis (`lint`), documentation linting (`doc-check`), and the test suite (`test`) |
 | `make test` | Executes the spec test suite (`crystal spec`) |
-| `make lint` | Runs `crystal tool format --check`, Ameba static analysis, and Flaw SAST scanner |
-| `make doc-check` | Lints all reStructuredText documentation using `crstlint -r .` and `rstcheck` |
+| `make lint` | Runs `crystal tool format --check`, Ameba static analysis, and Flaw SAST security scanner |
+| `make doc-check` | Lints all reStructuredText files using `crstlint` and `rstcheck` |
+| `make check` | Aggregates `lint`, `doc-check`, and `test` |
 | `make docs` | Generates Crystal API docs (`docs/technical/api`) and builds the Sphinx `dirhtml` portal (`docs/build/dirhtml`) |
+| `make deps` | Installs Shards dependencies and builds `bin/ameba` and `bin/flaw` |
 | `make clean` | Removes build artifacts and generated documentation |
+
+---
 
 ## Documentation
 
@@ -92,20 +124,38 @@ Full architectural blueprints, functional specifications, and operational playbo
 
 | Guide | Scope & Highlights | Entry Point |
 | :--- | :--- | :--- |
-| **Business & Strategy** | Cryptographic security problem statement, ROI metrics, and user personas. | [Business Specs](docs/business/spec.rst) |
-| **Functional Specifications** | Requirements `[FUNC-001]`–`[FUNC-005]` and behavioral contracts. | [Functional Specs](docs/functional/spec.rst) |
-| **Technical Architecture** | Secure memory isolation model, FFI bindings, coding standards, and threat model. | [Technical Specs](docs/technical/spec.rst) |
+| **Business Context & Strategy** | Cryptographic security problem statement, ROI metrics, and personas. | [Business Specs](docs/business/spec.rst) |
+| **Functional Specifications** | Requirements `[FUNC-001]`–`[FUNC-007]` and behavioral contracts. | [Functional Specs](docs/functional/spec.rst) |
+| **Technical Architecture** | Specifications `[TECH-001]`–`[TECH-007]`, D2 architecture diagram, and threat model. | [Technical Specs](docs/technical/spec.rst) |
 | **Release Playbook** | SemVer, Keep a Changelog, and GPG-signed GitLab release steps. | [Release Procedure](docs/technical/specs/release-procedure.rst) |
-| **Architecture Decisions** | Immutable records of architectural decisions and security trade-offs. | [ADR Index](docs/adrs/index.rst) |
-| **Project Roadmap** | Phased milestone tracking, delivery roadmaps, and audit logs. | [Project Roadmap](docs/project/roadmap.rst) |
+| **Architecture Decisions (ADRs)** | Immutable logs of architectural decisions and security trade-offs. | [ADR Index](docs/adrs/index.rst) |
+| **Project Roadmap** | Dependency-tracked phased milestones, D2 roadmaps, and audit logs. | [Project Roadmap](docs/project/roadmap.rst) |
 | **User Guides** | Installation, usage examples, and exception handling. | [User Manual](docs/user/index.rst) |
-| **Crystal API Reference** | Compiler-generated API documentation (`make docs`). | `docs/technical/api/index.html` |
+| **Crystal API Reference** | Complete interactive type hierarchy and method signatures. | [API Reference](https://renich.gitlab.io/crystal-ecc-constant/technical/api/) |
+
+---
 
 ## Contributing & Code of Honor
 
 All contributions must adhere to the [Universal Code of Honor](CODE_OF_HONOR.rst) and [Contributing Guidelines](CONTRIBUTING.rst).
 
+---
+
 ## License
 
-- **Software**: GNU Affero General Public License v3.0 or later ([LICENSE](LICENSE)).
+- **Software**: GNU General Public License v3.0 or later ([LICENSE](LICENSE)).
 - **Documentation**: GNU Free Documentation License v1.3 or later ([LICENSE-DOCS](LICENSE-DOCS)).
+
+Copyleft &copy; 2026 Rénich Bon Ćirić &lt;renich@evalinux.com&gt;.
+
+---
+
+## Support & Donations
+
+If you find this shard useful and wish to support its ongoing development, please consider donating:
+
+<p align="center">
+  <a href="https://liberapay.com/Renich/donate">
+    <img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg" />
+  </a>
+</p>

@@ -1,0 +1,103 @@
+direction: down
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 4
+    pad: 40
+  }
+}
+
+classes: {
+  tier: {
+    style: {
+      stroke: "#2B6CB0"
+      stroke-width: 2
+      border-radius: 8
+      fill: "#F7FAFC"
+    }
+  }
+  module_node: {
+    shape: rectangle
+    style: {
+      stroke: "#3182CE"
+      stroke-width: 2
+      border-radius: 6
+      fill: "#EBF8FF"
+      font-color: "#1A365D"
+      bold: true
+    }
+  }
+  secure_arena: {
+    shape: cylinder
+    style: {
+      stroke: "#2F855A"
+      stroke-width: 2
+      fill: "#F0FFF4"
+      font-color: "#22543D"
+      bold: true
+    }
+  }
+  phase2_node: {
+    shape: rectangle
+    style: {
+      stroke: "#6B46C1"
+      stroke-width: 2
+      stroke-dash: 3
+      border-radius: 6
+      fill: "#FAF5FF"
+      font-color: "#44337A"
+      bold: true
+    }
+  }
+}
+
+crystal_tier: "Crystal::Ecc::Constant Reference Layer" {
+  class: tier
+
+  sodium_init: "Sodium.init & constant_time_equal?\nAtomic(Bool) + Sync::Mutex\n[FUNC-004] [FUNC-005] [TECH-004]" {
+    class: module_node
+  }
+
+  secure_buffer: "SecureBuffer & PrivateKeyPointer\nsodium_malloc + sodium_mprotect_readonly\nsodium_memzero + sodium_free under Sync::Mutex\n[FUNC-001] [TECH-001]" {
+    class: module_node
+  }
+
+  ed25519: "Ed25519KeyPair\n.generate, .from_seed\n#sign, #verify, .verify_detached\n[FUNC-002] [TECH-002]" {
+    class: module_node
+  }
+
+  x25519: "X25519KeyPair\n.generate, .from_seed\n#diffie_hellman, #shared_secret\n[FUNC-003] [TECH-002]" {
+    class: module_node
+  }
+
+  shared_secret: "SharedSecret#consume\nBlock-Scoped Read-Only Slice\nImmediate Auto-Disposal\n[FUNC-003] [TECH-003]" {
+    class: module_node
+  }
+
+  ed25519ph: "Ed25519ph Streaming State (v0.3.0)\ncrypto_sign_ed25519ph_state in Guarded Memory\nMulti-Part Large Payload Signing\n[FUNC-006] [TECH-006]" {
+    class: phase2_node
+  }
+
+  kdf: "Guarded Subkey KDF & Wycheproof Suite (v0.3.0)\ncrypto_kdf_derive_from_key -> SecureBuffer\nRFC 7748 & Wycheproof Edge-Case Vectors\n[FUNC-007] [TECH-007]" {
+    class: phase2_node
+  }
+
+  sodium_init -> secure_buffer: "Initializes libsodium >= 10"
+  secure_buffer -> ed25519: "64-Byte Guarded Secret Key"
+  secure_buffer -> x25519: "32-Byte Guarded Scalar"
+  x25519 -> shared_secret: "crypto_scalarmult Output"
+  secure_buffer -> ed25519ph: "208-Byte Guarded Streaming State"
+  secure_buffer -> kdf: "32-Byte Guarded Master Key & Subkeys"
+}
+
+native_tier: "libsodium Native Guarded Memory Arena" {
+  class: tier
+
+  arena: "libsodium C ABI & Virtual Memory Protection\nmlock + Guard Pages + mprotect READONLY/READWRITE\n[TECH-001] [TECH-005]" {
+    class: secure_arena
+  }
+}
+
+crystal_tier.secure_buffer -> native_tier.arena: "FFI Page Lock & Zeroization"
+crystal_tier.shared_secret -> native_tier.arena: "ensure -> sodium_memzero + sodium_free"

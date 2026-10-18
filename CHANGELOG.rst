@@ -10,6 +10,13 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+.. rubric:: Added
+
+- Phase 2 (``v0.3.0``) specifications defining ``[FUNC-006]`` (``Ed25519ph`` pre-hashed streaming signatures in guarded memory) and ``[FUNC-007]`` (``crypto_kdf`` guarded subkey derivation and RFC 8032, RFC 7748, and Wycheproof edge-case vector suite) with 1:1 technical traceability (``[TECH-001]``..``[TECH-007]``) and ``ADR-002``.
+- Dependency-tracked phased roadmaps (``TASK-101``..``TASK-105`` and ``TASK-201``..``TASK-204``) with explicit ``Fulfills``, ``Blocked By``, ``Unblocks``, and ``Critical Path`` chains.
+- Declarative D2 architecture and roadmap diagrams (``docs/diagrams/architecture.d2``, ``docs/diagrams/roadmaps/roadmap.d2``, ``docs/diagrams/roadmaps/phase-1-mvp.d2``, and ``docs/diagrams/roadmaps/phase-2-enhancement.d2``) compiled to SVG.
+- Visual brand assets ``assets/banner.svg`` and ``assets/icon.svg`` and full ``../init/lib`` alignment for ``README.md`` and ``CONTRIBUTING.rst``.
+
 [0.2.1] - 2026-10-18
 ====================
 

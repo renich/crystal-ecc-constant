@@ -2,7 +2,7 @@
 Crystal ECC Constant Documentation
 ==================================
 
-**Constant-Time Ed25519 Digital Signatures and X25519 ECDH Key Agreement Backed by libsodium Secure Memory.**
+**Constant-Time Ed25519 Digital Signatures and X25519 ECDH Key Agreement in Guarded Memory.**
 
 Welcome to the official documentation portal for ``crystal-ecc-constant``.
 
@@ -18,22 +18,22 @@ Documentation Architecture
      - Entrypoint
    * - **Business & Strategy**
      - Strategic vision, cryptographic security goals, and user personas.
-     - `Business Specifications <business/spec.rst>`__
+     - :doc:`Business Specifications <business/spec>`
    * - **Functional Specifications**
-     - Requirements ``[FUNC-001]``..``[FUNC-005]``, behavioral contracts, and interfaces.
-     - `Functional Specifications <functional/spec.rst>`__
+     - Requirements ``[FUNC-001]`` through ``[FUNC-007]``, behavioral contracts, and interfaces.
+     - :doc:`Functional Specifications <functional/spec>`
    * - **Technical Architecture**
-     - Memory isolation model, libsodium FFI bindings, threat model, and release strategy.
-     - `Technical Architecture <technical/spec.rst>`__
+     - Specifications ``[TECH-001]`` through ``[TECH-007]``, memory isolation model, threat model, and release strategy.
+     - :doc:`Technical Architecture <technical/spec>`
    * - **Architecture Decisions**
      - Immutable Architecture Decision Records and trade-off analyses.
-     - `Architecture Decisions <adrs/index.rst>`__
+     - :doc:`Architecture Decisions <adrs/index>`
    * - **Project Roadmap**
-     - Sequenced phase milestones, delivery tracking, and audit records.
-     - `Project Roadmap <project/roadmap.rst>`__
+     - Dependency-tracked phased milestones, critical path analysis, and audit records.
+     - :doc:`Project Roadmap <project/roadmap>`
    * - **User Guides**
      - Integration guides, code examples, and API tutorials.
-     - `User Manual <user/index.rst>`__
+     - :doc:`User Manual <user/index>`
    * - **Crystal API Reference**
      - Compiler-generated API documentation covering all classes, structs, and modules.
      - `Crystal API Reference <technical/api/index.html>`__

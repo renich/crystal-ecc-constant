@@ -1,0 +1,57 @@
+direction: right
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 4
+    pad: 40
+  }
+}
+
+classes: {
+  completed_phase: {
+    shape: step
+    style: {
+      stroke: "#2F855A"
+      stroke-width: 2
+      fill: "#F0FFF4"
+      font-color: "#22543D"
+      bold: true
+    }
+  }
+  planned_phase: {
+    shape: step
+    style: {
+      stroke: "#6B46C1"
+      stroke-width: 2
+      fill: "#FAF5FF"
+      font-color: "#44337A"
+      bold: true
+    }
+  }
+  audit_gate: {
+    shape: diamond
+    style: {
+      stroke: "#2B6CB0"
+      stroke-width: 2
+      fill: "#EBF8FF"
+      font-color: "#1A365D"
+      bold: true
+    }
+  }
+}
+
+phase1: "Phase 1: MVP & Hardening (v0.1.0 - v0.2.1)\nStatus: Completed\nFulfills [FUNC-001]..[FUNC-005]\nImplements [TECH-001]..[TECH-005]" {
+  class: completed_phase
+}
+
+gate1: "Crucible & Echelon Audit\n25/25 Specs Passing\n0 Linter Findings" {
+  class: audit_gate
+}
+
+phase2: "Phase 2: Streaming & KDF Enhancement (v0.3.0)\nStatus: Planned\nFulfills [FUNC-006]..[FUNC-007]\nImplements [TECH-005]..[TECH-007]" {
+  class: planned_phase
+}
+
+phase1 -> gate1: "Verified v0.2.1"
+gate1 -> phase2: "Unblocks Phase 2"

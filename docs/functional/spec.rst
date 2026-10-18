@@ -5,7 +5,7 @@ Functional Specifications
 Overview
 --------
 
-This section defines the functional behavior, cryptographic capability requirements, and observable contracts of ``crystal-ecc-constant``.
+This section defines the deterministic functional requirements ``[FUNC-001]`` through ``[FUNC-007]``, cryptographic capability contracts, and observable interfaces of ``crystal-ecc-constant``.
 
 .. toctree::
    :maxdepth: 1

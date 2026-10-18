@@ -12,3 +12,4 @@ This section contains immutable Architecture Decision Records documenting major 
    :caption: Decision Records
 
    2026-10-18-initial-architecture
+   2026-10-18-phase-2-ed25519ph-and-kdf
