@@ -1,7 +1,7 @@
 # Constant-time Elliptic Curve Cryptography (Ed25519 and X25519) backed by libsodium secure memory.
 module Crystal::Ecc::Constant
   # The current library version.
-  VERSION = "0.2.0"
+  VERSION = "0.2.1"
 end
 
 require "./crystal-ecc-constant/lib_sodium"

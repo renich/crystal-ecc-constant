@@ -58,6 +58,7 @@ describe Crystal::Ecc::Constant do
 
   describe "Sodium Initialization & Version" do
     it "provides a valid LibSodium version string" do
+      Crystal::Ecc::Constant::VERSION.should eq("0.2.1")
       Crystal::Ecc::Constant::Sodium.init
       Crystal::Ecc::Constant::Sodium.initialized?.should be_true
       Crystal::Ecc::Constant::Sodium.version.should_not be_empty

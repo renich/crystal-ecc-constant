@@ -10,6 +10,19 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+[0.2.1] - 2026-10-18
+====================
+
+.. rubric:: Added
+
+- Full Sphinx and Crystal API documentation portal under ``docs/`` with modular business, functional, and technical specifications, Architecture Decision Records, phased roadmaps, audit logs, and user guides.
+- Added ``LICENSE-DOCS`` (GNU Free Documentation License v1.3), root ``CODE_OF_HONOR.rst``, and ``.crstlint.yaml``.
+- Added ``doc-check`` target in ``GNUmakefile`` enforcing ``crstlint`` and ``rstcheck`` validation alongside ``docs`` Sphinx ``dirhtml`` and Crystal API doc generation.
+
+.. rubric:: Changed
+
+- Aligned project metadata, ``.editorconfig``, ``.gitignore``, ``.ameba.yml``, ``CONTRIBUTING.rst``, and ``README.md`` with the standard Crystal library blueprint.
+
 [0.2.0] - 2026-10-18
 ====================
 

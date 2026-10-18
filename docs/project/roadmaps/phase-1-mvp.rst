@@ -1,20 +1,24 @@
-==============================================
-Phase 1: Constant-Time ECC & Memory Safety MVP
-==============================================
+============
+Phase 1: MVP
+============
 
-:Status: Completed
-:Target Version: 0.1.0
+Timeline and Objectives
+-----------------------
 
-Overview
-========
+Deliver the core constant-time Ed25519 and X25519 cryptographic shard backed by ``libsodium`` secure memory, reference-semantic key handles, and adversarial spec coverage.
 
-Implement constant-time Elliptic Curve Cryptography bindings to libsodium, providing Ed25519 digital signatures and X25519 Diffie-Hellman key exchange with strict memory encapsulation.
+Milestones and Deliverables
+---------------------------
 
-Milestones & Deliverables
-=========================
+* **Milestone 1.1: Core Cryptographic Primitives and Secure Memory** (Fulfills ``[FUNC-001]``, ``[FUNC-002]``, ``[FUNC-003]``, ``[FUNC-004]``):
 
-* **[ECC-001] LibSodium FFI Bindings**: Bind core functions (``crypto_sign_*``, ``crypto_box_*``, ``crypto_scalarmult``, ``sodium_memcmp``, ``sodium_malloc``, ``sodium_free``).
-* **[ECC-002] Ed25519 Detached Signatures**: Implement ``Ed25519KeyPair`` with detached signing and signature verification.
-* **[ECC-003] X25519 ECDH Key Exchange**: Implement ``X25519KeyPair`` and ``SharedSecret`` with one-time consumption semantics.
-* **[ECC-004] Memory Safety & Lifetime Management**: Ensure private key pointers and shared secrets are pinned in secure memory and wiped upon disposal.
-* **[ECC-005] Constant-Time Comparisons**: Implement ``Sodium.constant_time_equal?`` wrapping ``sodium_memcmp``.
+  - [x] ``LibSodium`` C ABI bindings for initialization, Ed25519, X25519, ``sodium_memcmp``, and ``sodium_malloc``.
+  - [x] ``PrivateKeyPointer`` and ``SharedSecret`` reference wrappers with ``sodium_mprotect_readonly`` and ``Sync::Mutex`` synchronization.
+  - [x] ``Ed25519KeyPair`` and ``X25519KeyPair`` random generation, deterministic 32-byte seed derivation, signing, verification, and ECDH key agreement.
+  - [x] Immutable ``PublicKey`` and ``Signature`` value structs with defensive byte copying.
+
+* **Milestone 1.2: Build System and Quality Automation** (Fulfills ``[FUNC-005]``):
+
+  - [x] Standard ``GNUmakefile`` with ``all``, ``test``, ``lint``, ``doc-check``, and ``docs`` targets.
+  - [x] Zero-suppression Ameba and Flaw SAST verification.
+  - [x] Complete Sphinx documentation portal and Crystal API reference generation.

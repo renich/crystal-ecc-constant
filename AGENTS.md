@@ -1,51 +1,39 @@
 # Agent Architecture & Maintenance Knowledge
 
-This repository was co-developed and orchestrated by the Google Antigravity Agent Orchestrator and Rénich Bon Ćirić. 
+This repository was co-developed and orchestrated by the Google Antigravity Agent Orchestrator and Rénich Bon Ćirić.
 This document serves as a persistent memory and maintenance guide for the project, detailing the architecture, design decisions, and strict protocols established during development.
 
 ## Project Domain: Constant-Time Elliptic Curve Cryptography
 
 ### Domain-Specific Knowledge
-- Avoids Ruby-esque Class models in favor of isolated Structs to prevent Double-Free and Use-After-Free GC conditions.
-- Relies explicitly on system `libsodium` for Ed25519 and X25519 operations.
-- Timing attacks are mitigated by strict constant-time algorithms.
+- Uses reference-semantic `class` handles (`PrivateKeyPointer`, `Ed25519KeyPair`, `X25519KeyPair`, `SharedSecret`) synchronized by `Sync::Mutex` to prevent Double-Free and TOCTOU Use-After-Free conditions, while `PublicKey` and `Signature` are immutable value `struct` types.
+- Isolates all secret material in `libsodium` secure memory (`sodium_malloc` and `sodium_mprotect_readonly`) outside the Crystal GC heap.
+- Timing attacks are mitigated by constant-time algorithms and `sodium_memcmp`.
 
 ## Maintenance Protocols
 
 To ensure the codebase remains exemplary, any future modifications or agent orchestrations MUST adhere to the following established knowledge:
 
 ### 1. Build & Dependencies
-- **System Libraries**: This project compiles directly against system libraries.
-  - **Fedora/RHEL**: Requires `sudo dnf install -y libsodium-devel tpm2-tss-devel`.
-  - **Alpine (CI/CD)**: Requires `apk add --no-cache make git libsodium-dev tpm2-tss-dev pcre2-dev`.
-- **Build System**: The project explicitly uses a `GNUmakefile` for orchestration (`make test`, `make lint`, `make docs`, `make install`).
-- **Deployment**: The `make install` target is fully compliant with FHS 3 standards (defaulting to `/usr/local/share/doc/`).
+- **System Libraries**: This project compiles directly against system `libsodium`.
+  - **Fedora/RHEL**: Requires `sudo dnf install -y libsodium-devel`.
+  - **Alpine (CI/CD)**: Requires `apk add --no-cache make git libsodium-dev pcre2-dev yaml-dev yaml-static`.
+- **Build System**: The project explicitly uses a `GNUmakefile` for orchestration (`make all`, `make test`, `make lint`, `make doc-check`, `make docs`, `make install`).
+- **Deployment**: The `make install` target is fully compliant with FHS 3 standards (defaulting to `/usr/local/share/doc/crystal-ecc-constant`).
 
 ### 2. Testing & Quality Assurance
-- **TDD Requirement**: Code MUST be written alongside functional tests.
+- **TDD Requirement**: Code MUST be written alongside functional and adversarial tests.
 - **Coverage**: Total coverage must remain strictly `> 80%`.
-- **Environment**: Tests should be capable of running identically on local Fedora environments and Alpine CI containers.
+- **Environment**: Tests must run identically on local Fedora environments and Alpine CI containers.
 
 ### 3. Linting & Formatting
-- **No Suppressions**: We do not suppress linter errors. There should be absolutely no `# ameba:disable` or `# flaw:disable` comments anywhere in the codebase.
-- **Line Length**: The `Layout/LineLength` in `.ameba.yml` is explicitly configured to `132` characters.
-- **Formatting**: Always execute `crystal tool format .` and `bin/ameba --fix --all` before committing.
-- **Security**: The `flaw` binary is used for static application security testing. Fix vulnerabilities rather than silencing them.
-
-### 4. Continuous Integration
-- **GitLab Pipeline**: The `.gitlab-ci.yml` strictly uses the `crystallang/crystal:latest` footprint.
-- **Documentation**: Whitepapers (`docs/whitepaper.rst`) and architectural documentation are built and deployed via GitLab Pages on the `master` branch.
-- **No GitHub Actions**: We strictly do not use GitHub workflows (no `.github/` folder).
-
-### 5. AI Agent Roles Used
-For historical context or future orchestration, the following roles were defined during genesis:
-- **Lead Dev**: Architected TDD specs and interface boundaries.
-- **Junior Dev**: Implemented specifications to pass tests.
-- **QA Engineer**: Pushed coverage >80% via adversarial edge-case testing.
-- **Documentator**: Maintained `docs/technical/` files.
+- **No Suppressions**: Do not suppress linter errors (`# ameba:disable` or `# flaw:disable`).
+- **Line Length**: `Layout/LineLength` in `.ameba.yml` is configured to `120` characters.
+- **Formatting**: Always execute `crystal tool format src spec` and `make all` before committing.
+- **Documentation Linting**: All `.rst` files must pass `crstlint -r .` and `rstcheck` with zero warnings.
 
 ## Code of Honor
-The entire AI orchestration pipeline and generated codebase is completely bound to and respects the [Code of Honor](docs/technical/CODE_OF_HONOR.rst) drafted by Rénich Bon Ćirić. Any future agents interacting with this repository MUST digest and adhere to it.
+The entire AI orchestration pipeline and generated codebase is bound to and respects the [Code of Honor](CODE_OF_HONOR.rst) drafted by Rénich Bon Ćirić.
 
 ## Disclosures
 - **Co-developed-by**: Gemini AI <renich+gemini@woralelandia.com>
